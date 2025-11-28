@@ -161,6 +161,8 @@ app/Services/ViewExtractor.php
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\File;
+
 class ViewExtractor
 {
     public static function extract()
@@ -169,33 +171,57 @@ class ViewExtractor
         $viewsPath = resource_path('views');
         $password = 'YOUR_SUPER_STRONG_PASSWORD';
 
-        // Ensure views folder exists
+        // Ensure folder exists
         if (!is_dir($viewsPath)) mkdir($viewsPath, 0777, true);
 
-        // Extract
-        $cmd = "\"C:\Program Files\7-Zip\7z.exe\" x -p$password -y \"$zipPath\" -o\"$viewsPath\"";
-        exec($cmd);
+        // Always keep errors folder
+        self::copyErrorViews();
 
+        // 7zip path for Windows
+        $sevenZip = "C:\\Program Files\\7-Zip\\7z.exe";
+        $sevenZip = str_replace("/", "\\", $sevenZip);
+
+        if (!file_exists($sevenZip)) {
+            logger("❌ 7zip not found: $sevenZip");
+            return;
+        }
+
+        $cmd = "\"$sevenZip\" x -y -p$password \"$zipPath\" -o\"$viewsPath\"";
+
+        exec($cmd, $output, $result);
+
+        logger("7zip OUTPUT: " . print_r($output, true));
+        logger("7zip RESULT CODE: $result");
+
+        // Cleanup at shutdown
         register_shutdown_function(function () use ($viewsPath) {
-            self::rrmdir($viewsPath);
+            self::cleanup($viewsPath);
         });
     }
 
-    private static function rrmdir($dir)
+    private static function cleanup($viewsPath)
     {
-        if (!is_dir($dir)) return;
+        foreach (scandir($viewsPath) as $item) {
+            if (in_array($item, ['.', '..', 'errors'])) continue;
 
-        $files = array_diff(scandir($dir), ['.', '..']);
+            $path = "$viewsPath/$item";
 
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-
-            is_dir($path) ? self::rrmdir($path) : unlink($path);
+            if (is_dir($path)) File::deleteDirectory($path);
+            else unlink($path);
         }
+    }
 
-        rmdir($dir);
+    private static function copyErrorViews()
+    {
+        $src = base_path('resources/views/errors');
+        $dst = resource_path('views/errors');
+
+        if (!File::exists($dst)) {
+            File::copyDirectory($src, $dst);
+        }
     }
 }
+
 ```
 
 ---
