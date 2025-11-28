@@ -70,6 +70,7 @@ Create a file:
 encrypt_views.bat
 ```
 
+
 Paste this **working version**:
 
 ```bat
@@ -78,9 +79,9 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 
 :: ====== CONFIG ======
 SET PROJECT_DIR=%cd%
-SET VIEWS_DIR=%PROJECT_DIR%esourcesiews
-SET SECURE_DIR=%PROJECT_DIR%\storagepp\secure
-SET ZIP_FILE=%SECURE_DIR%iews.enc.zip
+SET VIEWS_DIR=%PROJECT_DIR%\resources\views
+SET SECURE_DIR=%PROJECT_DIR%\storage\app\secure
+SET ZIP_FILE=%SECURE_DIR%\views.enc.zip
 SET PASSWORD=YOUR_SUPER_STRONG_PASSWORD
 SET SEVENZIP="C:\Program Files\7-Zip\7z.exe"
 :: =====================
@@ -142,6 +143,7 @@ rmdir /S /Q "views"
 echo.
 echo DONE. Views encrypted and removed.
 pause
+
 ```
 
 ---
